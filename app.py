@@ -7,8 +7,14 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urljoin
 import io
 import re
+import os
 
 app = Flask(__name__)
+
+def clean(text):
+    if not text:
+        return 'N/A'
+    return text.replace('\n', ' ').replace('\r', '').replace(',', ';').strip()
 
 def scrape_page(url):
     try:
@@ -28,18 +34,18 @@ def scrape_page(url):
 
         return {
             'url': url,
-            'title': title,
-            'meta_description': meta_desc,
-            'h1': '; '.join(headers_tags['h1']) or 'N/A',
-            'h2': '; '.join(headers_tags['h2']) or 'N/A',
-            'h3': '; '.join(headers_tags['h3']) or 'N/A',
-            'h4': '; '.join(headers_tags['h4']) or 'N/A'
+            'title': clean(title),
+            'meta_description': clean(meta_desc),
+            'h1': clean('; '.join(headers_tags['h1'])),
+            'h2': clean('; '.join(headers_tags['h2'])),
+            'h3': clean('; '.join(headers_tags['h3'])),
+            'h4': clean('; '.join(headers_tags['h4']))
         }
     except Exception as e:
         return {
             'url': url,
             'title': 'Error',
-            'meta_description': str(e),
+            'meta_description': clean(str(e)),
             'h1': 'N/A',
             'h2': 'N/A',
             'h3': 'N/A',
@@ -97,9 +103,6 @@ def scrape():
         download_name='seo_scraped_data.csv'
     )
 
-import os
-
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
-
