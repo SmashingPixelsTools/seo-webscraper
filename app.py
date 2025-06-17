@@ -1,11 +1,9 @@
 
-from flask import Flask, request, jsonify, send_file, render_template
+from flask import Flask, request, render_template
 from bs4 import BeautifulSoup
 import requests
-import pandas as pd
 import xml.etree.ElementTree as ET
 from urllib.parse import urljoin
-import io
 import re
 import os
 
@@ -24,7 +22,6 @@ def scrape_page(url):
         soup = BeautifulSoup(response.text, 'html.parser')
 
         title = soup.title.string.strip() if soup.title else 'N/A'
-
         meta_desc = soup.find('meta', attrs={'name': re.compile('description', re.I)})
         meta_desc = meta_desc['content'].strip() if meta_desc and 'content' in meta_desc.attrs else 'N/A'
 
@@ -32,14 +29,28 @@ def scrape_page(url):
         for tag in soup.find_all(['h1', 'h2', 'h3', 'h4']):
             headers_tags[tag.name].append(tag.get_text(strip=True))
 
+        h1s = headers_tags['h1']
+        suggestions = []
+        if not h1s:
+            suggestions.append("Missing H1 tag.")
+        elif len(h1s) > 1:
+            suggestions.append("Multiple H1 tags detected.")
+        if meta_desc == 'N/A':
+            suggestions.append("Missing meta description.")
+        if title == 'N/A':
+            suggestions.append("Missing title tag.")
+        if not headers_tags['h2']:
+            suggestions.append("Consider adding H2 subheadings.")
+
         return {
             'url': url,
             'title': clean(title),
             'meta_description': clean(meta_desc),
-            'h1': clean('; '.join(headers_tags['h1'])),
+            'h1': clean('; '.join(h1s)),
             'h2': clean('; '.join(headers_tags['h2'])),
             'h3': clean('; '.join(headers_tags['h3'])),
-            'h4': clean('; '.join(headers_tags['h4']))
+            'h4': clean('; '.join(headers_tags['h4'])),
+            'suggestions': suggestions
         }
     except Exception as e:
         return {
@@ -49,7 +60,8 @@ def scrape_page(url):
             'h1': 'N/A',
             'h2': 'N/A',
             'h3': 'N/A',
-            'h4': 'N/A'
+            'h4': 'N/A',
+            'suggestions': ["Page could not be reached or parsed."]
         }
 
 def parse_sitemap(file_content, base_url=None):
@@ -84,24 +96,23 @@ def scrape():
             urls.extend(parse_sitemap(sitemap_content))
 
     if not urls:
-        return jsonify({'error': 'No valid URLs provided'}), 400
+        return render_template('results.html', data=[{
+            'url': 'N/A',
+            'title': 'No URLs Submitted',
+            'meta_description': 'N/A',
+            'h1': 'N/A',
+            'h2': 'N/A',
+            'h3': 'N/A',
+            'h4': 'N/A',
+            'suggestions': ['Please enter at least one URL.']
+        }])
 
     results = []
     for url in urls:
         if url.startswith(('http://', 'https://')):
             results.append(scrape_page(url))
 
-    df = pd.DataFrame(results)
-    csv_buffer = io.StringIO()
-    df.to_csv(csv_buffer, index=False)
-
-    csv_buffer.seek(0)
-    return send_file(
-        io.BytesIO(csv_buffer.getvalue().encode('utf-8')),
-        mimetype='text/csv',
-        as_attachment=True,
-        download_name='seo_scraped_data.csv'
-    )
+    return render_template('results.html', data=results)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
