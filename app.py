@@ -1,3 +1,5 @@
+results_cache = []
+
 
 from flask import Flask, request, render_template, send_file
 from bs4 import BeautifulSoup
@@ -157,6 +159,8 @@ def scrape():
         }])
 
     results = [scrape_page(url) for url in urls if url.startswith(('http://', 'https://'))]
+    global results_cache
+    results_cache = results
 
     all_h1s = [r['h1'] for r in results if r['h1'] != 'N/A']
     dupes = [item for item, count in Counter(all_h1s).items() if count > 1]
@@ -181,6 +185,26 @@ def download_csv():
                      mimetype='text/csv',
                      as_attachment=True,
                      download_name='seo_report.csv')
+
+
+@app.route('/send_report', methods=['POST'])
+def send_report():
+    email = request.form.get('email')
+    if not email:
+        return "No email provided", 400
+
+    if not results_cache:
+        return "No results available to send.", 400
+
+    df = pd.DataFrame(results_cache)
+    csv_buffer = io.StringIO()
+    df.drop(columns=['raw_h1s'], errors='ignore').to_csv(csv_buffer, index=False)
+    csv_data = csv_buffer.getvalue().encode('utf-8')
+
+    if send_email_with_csv(email, csv_data):
+        return "Report sent successfully!"
+    else:
+        return "Failed to send email. Check server log.", 500
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
