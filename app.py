@@ -1,7 +1,5 @@
-results_cache = []
 
-
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, redirect, url_for
 from bs4 import BeautifulSoup
 import requests
 import xml.etree.ElementTree as ET
@@ -17,6 +15,7 @@ from email.mime.application import MIMEApplication
 from collections import Counter
 
 app = Flask(__name__)
+results_cache = []
 
 def clean(text):
     if not text:
@@ -106,14 +105,15 @@ def parse_sitemap(file_content, base_url=None):
         print(f"Error parsing sitemap: {e}")
     return urls
 
-def send_email_with_csv(recipient_email, csv_data):
+def send_email_with_csv(recipient_email, csv_data, name=None):
     try:
         msg = MIMEMultipart()
-        msg['From'] = 'no-reply@smashingpixels.ca'
+        msg['From'] = 'smashingpixelsservice@gmail.com'
         msg['To'] = recipient_email
         msg['Subject'] = 'Your Smashing Pixels SEO Report'
 
-        body = MIMEText('Attached is your SEO analysis report from Smashing Pixels.', 'plain')
+        body_text = f"Hi {name or 'there'},\n\nAttached is your SEO analysis report from Smashing Pixels.\n\nRegards,\nSmashing Pixels"
+        body = MIMEText(body_text, 'plain')
         msg.attach(body)
 
         part = MIMEApplication(csv_data, Name='seo_report.csv')
@@ -121,8 +121,8 @@ def send_email_with_csv(recipient_email, csv_data):
         msg.attach(part)
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
-    server.starttls()
-    server.login('smashingpixelsservice@gmail.com', 'csxg uivg ldup qtkb')
+            server.starttls()
+            server.login('smashingpixelsservice@gmail.com', 'YOUR_APP_PASSWORD')
             server.send_message(msg)
         return True
     except Exception as e:
@@ -169,26 +169,11 @@ def scrape():
             if r['h1'] in dupes:
                 r['suggestions'].append("⚠️ This H1 appears on multiple pages. Try to make each page's main headline unique.")
 
-    df = pd.DataFrame(results)
-    csv_buffer = io.StringIO()
-    df.drop(columns=['raw_h1s'], errors='ignore').to_csv(csv_buffer, index=False)
-    csv_data = csv_buffer.getvalue().encode('utf-8')
-
-    if data.get('email'):
-        send_email_with_csv(data['email'], csv_data)
-
     return render_template('results.html', data=results)
-
-@app.route('/download', methods=['GET'])
-def download_csv():
-    return send_file(io.BytesIO(csv_data),
-                     mimetype='text/csv',
-                     as_attachment=True,
-                     download_name='seo_report.csv')
-
 
 @app.route('/send_report', methods=['POST'])
 def send_report():
+    name = request.form.get('name')
     email = request.form.get('email')
     if not email:
         return "No email provided", 400
@@ -201,10 +186,10 @@ def send_report():
     df.drop(columns=['raw_h1s'], errors='ignore').to_csv(csv_buffer, index=False)
     csv_data = csv_buffer.getvalue().encode('utf-8')
 
-    if send_email_with_csv(email, csv_data):
-        return "Report sent successfully!"
+    if send_email_with_csv(email, csv_data, name):
+        return render_template('results.html', data=results_cache, message="✅ Email sent successfully!")
     else:
-        return "Failed to send email. Check server log.", 500
+        return render_template('results.html', data=results_cache, message="❌ Failed to send email. Try again later.")
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
