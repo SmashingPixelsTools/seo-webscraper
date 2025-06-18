@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urljoin
 import re
 import os
+from collections import Counter
 
 app = Flask(__name__)
 
@@ -13,6 +14,9 @@ def clean(text):
     if not text:
         return 'N/A'
     return text.replace('\n', ' ').replace('\r', '').replace(',', ';').strip()
+
+def extract_keywords(text):
+    return set(re.findall(r'\b\w{4,}\b', text.lower()))
 
 def generate_suggestions(title, meta_desc, h1s, h2s):
     tips = []
@@ -22,6 +26,8 @@ def generate_suggestions(title, meta_desc, h1s, h2s):
         tips.append("⚠️ You have more than one H1 headline. It's best to use only one to define the page's main topic.")
     if meta_desc == 'N/A':
         tips.append("❌ Add a meta description to help search engines and users understand your page.")
+    elif len(meta_desc.strip()) < 25:
+        tips.append("⚠️ Your meta description is very short. Try writing a 1–2 sentence summary to help Google and users.")
     if title == 'N/A':
         tips.append("❌ Your page is missing a title tag. This appears in search engine results and browser tabs.")
     if not h2s:
@@ -30,6 +36,11 @@ def generate_suggestions(title, meta_desc, h1s, h2s):
         tips.append("⚠️ Your title is quite long. Try keeping it under 60 characters to avoid getting cut off in search results.")
     if len(meta_desc) > 160:
         tips.append("⚠️ Your meta description is long. Try to keep it around 150–160 characters.")
+    if h1s and title != 'N/A':
+        h1_keywords = extract_keywords(' '.join(h1s))
+        title_keywords = extract_keywords(title)
+        if not h1_keywords.intersection(title_keywords):
+            tips.append("⚠️ Your main headline (H1) doesn't reflect the page title. Align them for better SEO.")
     return tips
 
 def scrape_page(url):
@@ -57,6 +68,7 @@ def scrape_page(url):
             'h2': clean('; '.join(headers_tags['h2'])),
             'h3': clean('; '.join(headers_tags['h3'])),
             'h4': clean('; '.join(headers_tags['h4'])),
+            'raw_h1s': headers_tags['h1'],
             'suggestions': suggestions
         }
     except Exception as e:
@@ -68,6 +80,7 @@ def scrape_page(url):
             'h2': 'N/A',
             'h3': 'N/A',
             'h4': 'N/A',
+            'raw_h1s': [],
             'suggestions': ["⚠️ Could not reach or analyze the page. Please check the URL."]
         }
 
@@ -118,6 +131,14 @@ def scrape():
     for url in urls:
         if url.startswith(('http://', 'https://')):
             results.append(scrape_page(url))
+
+    # Cross-page duplicate H1 analysis
+    all_h1s = [r['h1'] for r in results if r['h1'] != 'N/A']
+    dupes = [item for item, count in Counter(all_h1s).items() if count > 1]
+    if len(urls) > 1:
+        for r in results:
+            if r['h1'] in dupes:
+                r['suggestions'].append("⚠️ This H1 appears on multiple pages. Try to make each page's main headline unique.")
 
     return render_template('results.html', data=results)
 
