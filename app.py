@@ -120,9 +120,9 @@ def send_email_with_csv(recipient_email, csv_data):
         part['Content-Disposition'] = 'attachment; filename="seo_report.csv"'
         msg.attach(part)
 
-        with smtplib.SMTP('smtp.example.com', 587) as server:
-            server.starttls()
-            server.login('your_username', 'your_password')
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+    server.starttls()
+    server.login('smashingpixelsservice@gmail.com', 'csxg uivg ldup qtkb')
             server.send_message(msg)
         return True
     except Exception as e:
