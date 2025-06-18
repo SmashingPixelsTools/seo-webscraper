@@ -14,6 +14,24 @@ def clean(text):
         return 'N/A'
     return text.replace('\n', ' ').replace('\r', '').replace(',', ';').strip()
 
+def generate_suggestions(title, meta_desc, h1s, h2s):
+    tips = []
+    if not h1s:
+        tips.append("❌ Your page is missing a main headline (H1). Add a clear, descriptive title near the top.")
+    elif len(h1s) > 1:
+        tips.append("⚠️ You have more than one H1 headline. It's best to use only one to define the page's main topic.")
+    if meta_desc == 'N/A':
+        tips.append("❌ Add a meta description to help search engines and users understand your page.")
+    if title == 'N/A':
+        tips.append("❌ Your page is missing a title tag. This appears in search engine results and browser tabs.")
+    if not h2s:
+        tips.append("ℹ️ Consider breaking up your content with subheadings (H2s) to make it easier to scan.")
+    if len(title) > 60:
+        tips.append("⚠️ Your title is quite long. Try keeping it under 60 characters to avoid getting cut off in search results.")
+    if len(meta_desc) > 160:
+        tips.append("⚠️ Your meta description is long. Try to keep it around 150–160 characters.")
+    return tips
+
 def scrape_page(url):
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
@@ -22,31 +40,20 @@ def scrape_page(url):
         soup = BeautifulSoup(response.text, 'html.parser')
 
         title = soup.title.string.strip() if soup.title else 'N/A'
-        meta_desc = soup.find('meta', attrs={'name': re.compile('description', re.I)})
-        meta_desc = meta_desc['content'].strip() if meta_desc and 'content' in meta_desc.attrs else 'N/A'
+        meta_desc_tag = soup.find('meta', attrs={'name': re.compile('description', re.I)})
+        meta_desc = meta_desc_tag['content'].strip() if meta_desc_tag and 'content' in meta_desc_tag.attrs else 'N/A'
 
         headers_tags = {'h1': [], 'h2': [], 'h3': [], 'h4': []}
         for tag in soup.find_all(['h1', 'h2', 'h3', 'h4']):
             headers_tags[tag.name].append(tag.get_text(strip=True))
 
-        h1s = headers_tags['h1']
-        suggestions = []
-        if not h1s:
-            suggestions.append("Missing H1 tag.")
-        elif len(h1s) > 1:
-            suggestions.append("Multiple H1 tags detected.")
-        if meta_desc == 'N/A':
-            suggestions.append("Missing meta description.")
-        if title == 'N/A':
-            suggestions.append("Missing title tag.")
-        if not headers_tags['h2']:
-            suggestions.append("Consider adding H2 subheadings.")
+        suggestions = generate_suggestions(title, meta_desc, headers_tags['h1'], headers_tags['h2'])
 
         return {
             'url': url,
             'title': clean(title),
             'meta_description': clean(meta_desc),
-            'h1': clean('; '.join(h1s)),
+            'h1': clean('; '.join(headers_tags['h1'])),
             'h2': clean('; '.join(headers_tags['h2'])),
             'h3': clean('; '.join(headers_tags['h3'])),
             'h4': clean('; '.join(headers_tags['h4'])),
@@ -61,7 +68,7 @@ def scrape_page(url):
             'h2': 'N/A',
             'h3': 'N/A',
             'h4': 'N/A',
-            'suggestions': ["Page could not be reached or parsed."]
+            'suggestions': ["⚠️ Could not reach or analyze the page. Please check the URL."]
         }
 
 def parse_sitemap(file_content, base_url=None):
