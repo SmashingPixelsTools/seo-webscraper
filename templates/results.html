@@ -68,6 +68,14 @@
         </div>
       </div>
     {% endfor %}
+
+    <form action="/send_report" method="post" class="mt-4">
+      <div class="input-group mb-3">
+        <input type="email" name="email" class="form-control" placeholder="Enter your email to receive this report" required>
+        <button type="submit" class="btn btn-primary">Send Report</button>
+      </div>
+    </form>
+
     <a href="/" class="btn btn-secondary mt-3">Analyze Another</a>
   </div>
 
