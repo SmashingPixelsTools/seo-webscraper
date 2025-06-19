@@ -130,7 +130,7 @@ def send_email_with_pdf(recipient_email, pdf_data, name=None):
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login('smashingpixelsservice@gmail.com', 'YOUR_APP_PASSWORD')
+            server.login('smashingpixelsservice@gmail.com', 'csxg uivg ldup qtkb')
             server.send_message(msg)
         return True
     except Exception as e:
