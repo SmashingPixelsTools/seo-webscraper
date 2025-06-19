@@ -116,7 +116,7 @@ def generate_pdf_from_results(data):
 def get_domain_name(url):
     domain = urlparse(url).netloc
     domain = re.sub(r'^www\.', '', domain)
-    domain = domain.split('.')[0]  # Get just the main name
+    domain = domain.split('.')[0]
     return re.sub(r'[^a-zA-Z0-9_-]', '', domain).capitalize()
 
 def send_email_with_pdf(recipient_email, pdf_data, name=None, url=None):
@@ -131,8 +131,7 @@ def send_email_with_pdf(recipient_email, pdf_data, name=None, url=None):
         msg['Subject'] = 'Your Smashing Pixels SEO Report'
 
         body_text = f"Hi {name or 'there'},\n\nAttached is your SEO analysis report from Smashing Pixels.\n\nRegards,\nSmashing Pixels"
-        body = MIMEText(body_text, 'plain')
-        msg.attach(body)
+        msg.attach(MIMEText(body_text, 'plain'))
 
         part = MIMEApplication(pdf_data, Name=filename)
         part['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -153,11 +152,6 @@ def index():
 
 @app.route('/scrape', methods=['POST'])
 def scrape():
-    name = request.form.get('name')
-    email = request.form.get('email')
-    if not email or not name:
-        return "Name and email are required", 400
-
     data = request.form
     urls = []
     if 'urls' in data and data['urls']:
@@ -192,11 +186,23 @@ def scrape():
             if r['h1'] in dupes:
                 r['suggestions'].append("⚠️ This H1 appears on multiple pages. Try to make each page's main headline unique.")
 
-    pdf_data = generate_pdf_from_results(results)
+    return render_template('results.html', data=results)
 
-    send_email_with_pdf(email, pdf_data, name, urls[0] if urls else '')
+@app.route('/send_report', methods=['POST'])
+def send_report():
+    name = request.form.get('name')
+    email = request.form.get('email')
+    if not email or not name:
+        return "Name and email are required", 400
 
-    return render_template('results.html', data=results, message="✅ Report sent to your email.")
+    if not results_cache:
+        return "No results available to send.", 400
+
+    pdf_data = generate_pdf_from_results(results_cache)
+    if send_email_with_pdf(email, pdf_data, name, results_cache[0]['url']):
+        return render_template('results.html', data=results_cache, message="✅ Report sent to your email.")
+    else:
+        return render_template('results.html", data=results_cache, message="❌ Failed to send email. Try again later.")
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
