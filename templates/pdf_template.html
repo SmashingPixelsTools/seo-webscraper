@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SEO Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #222;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .result {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      padding: 1rem;
+    }
+    .result h2 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: #0056b3;
+    }
+    .meta {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+    .suggestions {
+      background: #fff8e1;
+      border-left: 4px solid #ffca28;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Smashing Pixels SEO Report</h1>
+
+  {% for row in data %}
+  <div class="result">
+    <h2><a href="{{ row.url }}">{{ row.url }}</a></h2>
+    <div class="meta"><strong>Title:</strong> {{ row.title }}</div>
+    <div class="meta"><strong>Meta Description:</strong> {{ row.meta_description }}</div>
+    <div class="meta"><strong>H1:</strong> {{ row.h1 }}</div>
+    <div class="meta"><strong>H2:</strong> {{ row.h2 }}</div>
+    <div class="meta"><strong>H3:</strong> {{ row.h3 }}</div>
+    <div class="meta"><strong>H4:</strong> {{ row.h4 }}</div>
+    <div class="suggestions">
+      <strong>Suggestions:</strong>
+      <ul>
+        {% for tip in row.suggestions %}
+        <li>{{ tip }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endfor %}
+
+</body>
+</html>
