@@ -10,10 +10,13 @@
       color: #fff;
       min-height: 100vh;
       font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
     }
     .container {
       max-width: 720px;
-      margin-top: 5vh;
     }
     .card {
       background: #f9f9f9;
@@ -37,7 +40,7 @@
     h1 {
       font-size: 2.75rem;
     }
-    textarea, input[type="file"], input[type="email"] {
+    textarea, input[type="file"] {
       border-radius: 0.375rem;
     }
   </style>
@@ -52,17 +55,15 @@
       <form action="/scrape" method="post" enctype="multipart/form-data">
         <div class="mb-3">
           <label for="urls" class="form-label">Enter URLs (one per line):</label>
-          <textarea name="urls" rows="5" class="form-control" placeholder="https://www.example.com/page-1"></textarea>
+          <textarea name="urls" rows="5" class="form-control" placeholder="https://www.example.com/page-1" required></textarea>
         </div>
         <div class="mb-3">
           <label for="sitemap" class="form-label">Or upload a sitemap.xml file:</label>
           <input type="file" name="sitemap" class="form-control">
         </div>
-        <div class="mb-3">
-          <label for="email" class="form-label">Send results to email (optional):</label>
-          <input type="email" name="email" class="form-control" placeholder="you@example.com">
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary">Analyze</button>
         </div>
-        <button type="submit" class="btn btn-primary">Analyze</button>
       </form>
     </div>
   </div>
