@@ -5,3 +5,4 @@ pandas
 lxml
 jinja2
 weasyprint
+pdfkit
