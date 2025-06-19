@@ -1,3 +1,4 @@
+
 from flask import Flask, request, render_template
 from bs4 import BeautifulSoup
 import requests
@@ -23,7 +24,7 @@ def clean(text):
     return text.replace('\n', ' ').replace('\r', '').replace(',', ';').strip()
 
 def extract_keywords(text):
-    return set(re.findall(r'\b\w{{4,}}\b', text.lower()))
+    return set(re.findall(r'\b\w{4,}\b', text.lower()))
 
 def generate_suggestions(title, meta_desc, h1s, h2s):
     tips = []
@@ -52,22 +53,25 @@ def generate_suggestions(title, meta_desc, h1s, h2s):
 
 def scrape_page(url):
     try:
-        headers = {{'User-Agent': 'Mozilla/5.0'}}
+        if not isinstance(url, str):
+            url = str(url)
+
+        headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
         title = soup.title.string.strip() if soup.title else 'N/A'
-        meta_desc_tag = soup.find('meta', attrs={{'name': re.compile('description', re.I)}})
+        meta_desc_tag = soup.find('meta', attrs={'name': re.compile('description', re.I)})
         meta_desc = meta_desc_tag['content'].strip() if meta_desc_tag and 'content' in meta_desc_tag.attrs else 'N/A'
 
-        headers_tags = {{'h1': [], 'h2': [], 'h3': [], 'h4': []}}
+        headers_tags = {'h1': [], 'h2': [], 'h3': [], 'h4': []}
         for tag in soup.find_all(['h1', 'h2', 'h3', 'h4']):
             headers_tags[tag.name].append(tag.get_text(strip=True))
 
         suggestions = generate_suggestions(title, meta_desc, headers_tags['h1'], headers_tags['h2'])
 
-        return {{
+        return {
             'url': url,
             'title': clean(title),
             'meta_description': clean(meta_desc),
@@ -77,9 +81,9 @@ def scrape_page(url):
             'h4': clean('; '.join(headers_tags['h4'])),
             'raw_h1s': headers_tags['h1'],
             'suggestions': suggestions
-        }}
+        }
     except Exception as e:
-        return {{
+        return {
             'url': url,
             'title': 'Error',
             'meta_description': clean(str(e)),
@@ -89,20 +93,20 @@ def scrape_page(url):
             'h4': 'N/A',
             'raw_h1s': [],
             'suggestions': ["⚠️ Could not reach or analyze the page. Please check the URL."]
-        }}
+        }
 
 def parse_sitemap(file_content, base_url=None):
     urls = []
     try:
         root = ET.fromstring(file_content)
-        namespace = {{'sitemap': 'http://www.sitemaps.org/schemas/sitemap/0.9'}}
+        namespace = {'sitemap': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
         for url_elem in root.findall('.//sitemap:loc', namespace):
-            url = url_elem.text.strip()
-            if base_url and not url.startswith(('http://', 'https://')):
-                url = urljoin(base_url, url)
-            urls.append(url)
+            text = url_elem.text.strip()
+            if base_url and not text.startswith(('http://', 'https://')):
+                text = urljoin(base_url, text)
+            urls.append(str(text))
     except Exception as e:
-        print(f"Error parsing sitemap: {{e}}")
+        print(f"Error parsing sitemap: {e}")
     return urls
 
 def generate_pdf_from_results(data):
@@ -121,7 +125,7 @@ def get_domain_name(url):
 def send_email_with_pdf(recipient_email, pdf_data, name=None, url=None):
     try:
         site_name = get_domain_name(url or '')
-        filename = f"{{site_name}}-SEO-Report.pdf"
+        filename = f"{site_name}-SEO-Report.pdf"
 
         msg = MIMEMultipart()
         msg['From'] = 'smashingpixelsservice@gmail.com'
@@ -129,11 +133,11 @@ def send_email_with_pdf(recipient_email, pdf_data, name=None, url=None):
         msg['Bcc'] = 'trevor@smashingpixels.ca'
         msg['Subject'] = 'Your Smashing Pixels SEO Report'
 
-        body_text = f"Hi {{name or 'there'}},\n\nAttached is your SEO analysis report from Smashing Pixels.\n\nRegards,\nSmashing Pixels"
+        body_text = f"Hi {name or 'there'},\n\nAttached is your SEO analysis report from Smashing Pixels.\n\nRegards,\nSmashing Pixels"
         msg.attach(MIMEText(body_text, 'plain'))
 
         part = MIMEApplication(pdf_data, Name=filename)
-        part['Content-Disposition'] = f'attachment; filename="{{filename}}"'
+        part['Content-Disposition'] = f'attachment; filename="{filename}"'
         msg.attach(part)
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
@@ -142,7 +146,7 @@ def send_email_with_pdf(recipient_email, pdf_data, name=None, url=None):
             server.send_message(msg)
         return True
     except Exception as e:
-        print(f"Email error: {{e}}")
+        print(f"Email error: {e}")
         return False
 
 @app.route('/')
@@ -163,7 +167,7 @@ def scrape():
             urls.extend(parse_sitemap(sitemap_content))
 
     if not urls:
-        return render_template('results.html', data=[{{
+        return render_template('results.html', data=[{
             'url': 'N/A',
             'title': 'No URLs Submitted',
             'meta_description': 'N/A',
@@ -172,9 +176,9 @@ def scrape():
             'h3': 'N/A',
             'h4': 'N/A',
             'suggestions': ['Please enter at least one URL.']
-        }}])
+        }])
 
-    results = [scrape_page(url) for url in urls if url.startswith(('http://', 'https://'))]
+    results = [scrape_page(url) for url in urls if isinstance(url, str) and url.startswith(('http://', 'https://'))]
     global results_cache
     results_cache = results
 
