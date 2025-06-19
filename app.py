@@ -13,6 +13,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from collections import Counter
+from jinja2 import Environment, FileSystemLoader
+from weasyprint import HTML
 
 app = Flask(__name__)
 results_cache = []
@@ -105,7 +107,15 @@ def parse_sitemap(file_content, base_url=None):
         print(f"Error parsing sitemap: {e}")
     return urls
 
-def send_email_with_csv(recipient_email, csv_data, name=None):
+def generate_pdf_from_results(data):
+    env = Environment(loader=FileSystemLoader('templates'))
+    template = env.get_template('pdf_template.html')
+    html_content = template.render(data=data)
+    pdf_file = io.BytesIO()
+    HTML(string=html_content).write_pdf(pdf_file)
+    return pdf_file.getvalue()
+
+def send_email_with_pdf(recipient_email, pdf_data, name=None):
     try:
         msg = MIMEMultipart()
         msg['From'] = 'smashingpixelsservice@gmail.com'
@@ -116,13 +126,13 @@ def send_email_with_csv(recipient_email, csv_data, name=None):
         body = MIMEText(body_text, 'plain')
         msg.attach(body)
 
-        part = MIMEApplication(csv_data, Name='seo_report.csv')
-        part['Content-Disposition'] = 'attachment; filename="seo_report.csv"'
+        part = MIMEApplication(pdf_data, Name='seo_report.pdf')
+        part['Content-Disposition'] = 'attachment; filename="seo_report.pdf"'
         msg.attach(part)
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login('smashingpixelsservice@gmail.com', 'csxg uivg ldup qtkb')
+            server.login('smashingpixelsservice@gmail.com', 'YOUR_APP_PASSWORD')
             server.send_message(msg)
         return True
     except Exception as e:
@@ -181,12 +191,9 @@ def send_report():
     if not results_cache:
         return "No results available to send.", 400
 
-    df = pd.DataFrame(results_cache)
-    csv_buffer = io.StringIO()
-    df.drop(columns=['raw_h1s'], errors='ignore').to_csv(csv_buffer, index=False)
-    csv_data = csv_buffer.getvalue().encode('utf-8')
+    pdf_data = generate_pdf_from_results(results_cache)
 
-    if send_email_with_csv(email, csv_data, name):
+    if send_email_with_pdf(email, pdf_data, name):
         return render_template('results.html', data=results_cache, message="✅ Email sent successfully!")
     else:
         return render_template('results.html', data=results_cache, message="❌ Failed to send email. Try again later.")
