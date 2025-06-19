@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for
 from bs4 import BeautifulSoup
 import requests
 import xml.etree.ElementTree as ET
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 import re
 import os
 import io
@@ -113,24 +113,34 @@ def generate_pdf_from_results(data):
     pdf_file = pdfkit.from_string(html_content, False)
     return pdf_file
 
-def send_email_with_pdf(recipient_email, pdf_data, name=None):
+def get_domain_name(url):
+    domain = urlparse(url).netloc
+    domain = re.sub(r'^www\.', '', domain)
+    domain = domain.split('.')[0]  # Get just the main name
+    return re.sub(r'[^a-zA-Z0-9_-]', '', domain).capitalize()
+
+def send_email_with_pdf(recipient_email, pdf_data, name=None, url=None):
     try:
+        site_name = get_domain_name(url or '')
+        filename = f"{site_name}-SEO-Report.pdf"
+
         msg = MIMEMultipart()
         msg['From'] = 'smashingpixelsservice@gmail.com'
         msg['To'] = recipient_email
+        msg['Bcc'] = 'trevor@smashingpixels.ca'
         msg['Subject'] = 'Your Smashing Pixels SEO Report'
 
         body_text = f"Hi {name or 'there'},\n\nAttached is your SEO analysis report from Smashing Pixels.\n\nRegards,\nSmashing Pixels"
         body = MIMEText(body_text, 'plain')
         msg.attach(body)
 
-        part = MIMEApplication(pdf_data, Name='seo_report.pdf')
-        part['Content-Disposition'] = 'attachment; filename="seo_report.pdf"'
+        part = MIMEApplication(pdf_data, Name=filename)
+        part['Content-Disposition'] = f'attachment; filename="{filename}"'
         msg.attach(part)
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login('smashingpixelsservice@gmail.com', 'csxg uivg ldup qtkb')
+            server.login('smashingpixelsservice@gmail.com', 'YOUR_APP_PASSWORD')
             server.send_message(msg)
         return True
     except Exception as e:
@@ -143,6 +153,11 @@ def index():
 
 @app.route('/scrape', methods=['POST'])
 def scrape():
+    name = request.form.get('name')
+    email = request.form.get('email')
+    if not email or not name:
+        return "Name and email are required", 400
+
     data = request.form
     urls = []
     if 'urls' in data and data['urls']:
@@ -177,24 +192,11 @@ def scrape():
             if r['h1'] in dupes:
                 r['suggestions'].append("⚠️ This H1 appears on multiple pages. Try to make each page's main headline unique.")
 
-    return render_template('results.html', data=results)
+    pdf_data = generate_pdf_from_results(results)
 
-@app.route('/send_report', methods=['POST'])
-def send_report():
-    name = request.form.get('name')
-    email = request.form.get('email')
-    if not email:
-        return "No email provided", 400
+    send_email_with_pdf(email, pdf_data, name, urls[0] if urls else '')
 
-    if not results_cache:
-        return "No results available to send.", 400
-
-    pdf_data = generate_pdf_from_results(results_cache)
-
-    if send_email_with_pdf(email, pdf_data, name):
-        return render_template('results.html', data=results_cache, message="✅ Email sent successfully!")
-    else:
-        return render_template('results.html', data=results_cache, message="❌ Failed to send email. Try again later.")
+    return render_template('results.html', data=results, message="✅ Report sent to your email.")
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
