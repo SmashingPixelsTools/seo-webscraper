@@ -1,4 +1,3 @@
-
 from flask import Flask, request, render_template, redirect, url_for
 from bs4 import BeautifulSoup
 import requests
@@ -14,7 +13,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from collections import Counter
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
+import pdfkit
 
 app = Flask(__name__)
 results_cache = []
@@ -111,9 +110,8 @@ def generate_pdf_from_results(data):
     env = Environment(loader=FileSystemLoader('templates'))
     template = env.get_template('pdf_template.html')
     html_content = template.render(data=data)
-    pdf_file = io.BytesIO()
-    HTML(string=html_content).write_pdf(pdf_file)
-    return pdf_file.getvalue()
+    pdf_file = pdfkit.from_string(html_content, False)
+    return pdf_file
 
 def send_email_with_pdf(recipient_email, pdf_data, name=None):
     try:
