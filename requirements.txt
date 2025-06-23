@@ -1,8 +1,8 @@
-flask==2.3.2
-jinja2==3.1.3
-beautifulsoup4==4.12.3
-requests==2.31.0
-lxml==5.2.1
-pdfkit==1.0.0
-email-validator==2.1.0.post1
-pandas==2.2.2
+flask
+requests
+beautifulsoup4
+pandas
+lxml
+jinja2
+weasyprint
+pdfkit
