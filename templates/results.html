@@ -1,134 +1,31 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>SEO Analysis Results</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: #f1f5f9; color: #1f2937; padding: 2rem;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .result-card {
-      background: #fff; border-radius: 0.75rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      padding: 1.5rem; margin-bottom: 2rem;
-    }
-    .suggestions {
-      background: #fff3cd; border-left: 4px solid #ffecb5;
-      padding: 1rem; border-radius: 0.5rem;
-    }
-    .form-footer {
-      max-width: 480px; margin: 2rem auto;
-    }
-    .trunc {
-      overflow: hidden;
-      max-height: 7.5em;
-      position: relative;
-    }
-    .trunc.expanded {
-      max-height: none;
-    }
-    .show-more {
-      display: block;
-      margin-top: 0.5rem;
-      color: #2563eb;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-  </style>
-  <script>
-    function toggleExpand(btn) {
-      const block = btn.previousElementSibling;
-      block.classList.toggle('expanded');
-      btn.innerText = block.classList.contains('expanded') ? 'Show less' : 'Show more';
-    }
-  </script>
-</head>
-<body>
-  <div class="container">
-    <h2 class="text-center mb-4">SEO Analysis Results</h2>
-    {% for row in data %}
-    <div class="result-card">
-      <p><a href="{{ row.url }}" target="_blank">{{ row.url }}</a></p>
-      <p><strong>Title:</strong> {{ row.title }}</p>
-      <p><strong>Meta Description:</strong>
-        <div class="trunc">{{ row.meta_description }}</div>
-        {% if row.meta_description|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>H1:</strong>
-        <div class="trunc">{{ row.h1 }}</div>
-        {% if row.h1|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>H2:</strong>
-        <div class="trunc">{{ row.h2 }}</div>
-        {% if row.h2|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>H3:</strong>
-        <div class="trunc">{{ row.h3 }}</div>
-        {% if row.h3|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>H4:</strong>
-        <div class="trunc">{{ row.h4 }}</div>
-        {% if row.h4|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>Schema:</strong>
-        <div class="trunc">{{ row.schema or "N/A" }}</div>
-        {% if row.schema and row.schema|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      {% if row.suggestions %}
-      <div class="suggestions mt-3">
-        <strong>Suggestions:</strong>
-        <ul>
-          {% for tip in row.suggestions %}
-          <li>{{ tip }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-      {% endif %}
-    </div>
-    {% endfor %}
+<!-- results.html (excerpt) -->
+<!-- Button row update -->
+<div class="d-flex justify-content-center gap-3 mt-4">
+  <button onclick="window.print()" class="btn btn-outline-secondary">🖨️ Print</button>
+  <form method="get" action="/">
+    <button type="submit" class="btn btn-outline-primary">🔁 Run New Test</button>
+  </form>
+  <form method="post" action="/send_report">
+    <input type="hidden" name="name" value="{{ name }}">
+    <input type="hidden" name="email" value="{{ email }}">
+    <button type="submit" class="btn btn-primary">📧 Email Me This Report</button>
+  </form>
+</div>
 
-    {% if message %}
-    <div class="alert alert-info text-center">{{ message }}</div>
-    {% endif %}
-
-    <form action="/send_report" method="post" class="form-footer">
-      <div class="mb-3">
-        <label for="name" class="form-label">Your Name:</label>
-        <input type="text" name="name" class="form-control" required placeholder="John Doe">
-      </div>
-      <div class="mb-3">
-        <label for="email" class="form-label">Your Email:</label>
-        <input type="email" name="email" class="form-control" required placeholder="you@example.com">
-      </div>
-      <div class="text-center">
-        <button type="submit" class="btn btn-primary">
-          📧 Email Me This Report
-        </button>
-      </div>
-    </form>
-
-    <hr class="my-5">
-    <p class="text-center text-muted small">
-      🚀 This SEO analysis was powered by <strong>Smashing Pixels</strong>.  
-      Want help fixing your site's SEO?  
-      <a href="mailto:trevor@smashingpixels.ca">Contact Trevor Cherewka</a> or  
-      <a href="https://calendly.com/trevorcherewka">Book a consult</a>.
-    </p>
-  </div>
-</body>
-</html>
+<!-- Add media query and print-specific CSS styling to keep layout clean -->
+<style>
+@media print {
+  body {
+    color: #000;
+    background: white;
+  }
+  .footer, form {
+    display: none;
+  }
+  .result-card {
+    box-shadow: none !important;
+    border: none;
+  }
+}
+</style>
