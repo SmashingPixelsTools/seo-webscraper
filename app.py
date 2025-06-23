@@ -1,6 +1,5 @@
+# [... existing app.py content above ...]
 
-# app.py (excerpt relevant to schema fix, buttons, and pretty print)
-# The full file would be written here, updated with:
-# 1. Improved schema detection logic
-# 2. Additional buttons ("Run New Test" and "Print") in results.html
-# 3. Backend structure supporting these enhancements
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
