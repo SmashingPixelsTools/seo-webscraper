@@ -69,6 +69,20 @@ def scrape_page(url):
         for tag in soup.find_all(['h1', 'h2', 'h3', 'h4']):
             headers_tags[tag.name].append(tag.get_text(strip=True))
 
+                # Extract schema.org JSON-LD data and truncate for output
+        schema_data = []
+        for script_tag in soup.find_all('script', type='application/ld+json'):
+            content = script_tag.string
+            if content:
+                schema_data.append(content.strip())
+        if schema_data:
+            schema_str = '\n\n'.join(schema_data)
+            if len(schema_str) > 500:
+                schema_str = schema_str[:500] + '...'
+            schema_result = schema_str
+        else:
+            schema_result = "N/A"
+
         suggestions = generate_suggestions(title, meta_desc, headers_tags['h1'], headers_tags['h2'])
 
         return {
@@ -80,6 +94,7 @@ def scrape_page(url):
             'h3': clean('; '.join(headers_tags['h3'])),
             'h4': clean('; '.join(headers_tags['h4'])),
             'raw_h1s': headers_tags['h1'],
+            'schema': schema_result,
             'suggestions': suggestions
         }
     except Exception as e:
