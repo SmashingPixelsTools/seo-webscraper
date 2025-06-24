@@ -40,6 +40,7 @@
                 min-width: unset;
             }
         }
+        .card ul { margin-bottom: 0; }
     </style>
 </head>
 <body class="bg-dark text-light">
@@ -53,13 +54,37 @@
             <button onclick="location.href='/'" class="btn btn-green">Run New Test</button>
         </div>
 
-        <!-- Your SEO Results Here -->
+        <!-- SEO Results Loop -->
+        {% for result in data %}
         <div class="card bg-secondary text-light mb-3">
             <div class="card-body">
-                <!-- Replace with your dynamic SEO results block -->
-                {{ results_html|safe }}
+                <h5 class="card-title mb-2"><a href="{{ result.url }}" class="link-info" target="_blank">{{ result.url }}</a></h5>
+                <ul class="list-unstyled mb-2">
+                    <li><strong>Title:</strong> {{ result.title }}</li>
+                    <li><strong>Meta Description:</strong> {{ result.meta_description }}</li>
+                    <li><strong>H1:</strong> {{ result.h1 }}</li>
+                    <li><strong>H2:</strong> {{ result.h2 }}</li>
+                    <li><strong>H3:</strong> {{ result.h3 }}</li>
+                    <li><strong>H4:</strong> {{ result.h4 }}</li>
+                    <li><strong>Schema:</strong> <span style="word-break:break-all">{{ result.schema }}</span></li>
+                </ul>
+                {% if result.suggestions %}
+                <div class="mt-2">
+                    <strong>Suggestions:</strong>
+                    <ul>
+                        {% for tip in result.suggestions %}
+                        <li>{{ tip }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
             </div>
         </div>
+        {% endfor %}
+
+        {% if message %}
+        <div class="alert alert-success mt-3">{{ message }}</div>
+        {% endif %}
 
         <!-- Branded Footer -->
         <footer class="mt-5 text-center small text-muted">
