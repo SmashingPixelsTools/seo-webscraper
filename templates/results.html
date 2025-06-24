@@ -202,11 +202,14 @@
       </div>
     {% endfor %}
 
-    <form class="form-footer" action="/send_report" method="post">
-      <input type="text" name="name" placeholder="Your Name" required value="{{ name or '' }}">
-      <input type="email" name="email" placeholder="Your Email" required value="{{ email or '' }}">
-      <button class="btn" type="submit">📧 Email Me This Report</button>
+    <div class="form-footer" style="display: flex; justify-content: center; align-items: center; gap: 1em;">
+      <form action="/send_report" method="post" style="display:inline;">
+        <input type="text" name="name" placeholder="Your Name" required value="{{ name or '' }}">
+        <input type="email" name="email" placeholder="Your Email" required value="{{ email or '' }}">
+      <button class="btn" type="submit">📧 Email Results</button>
     </form>
+    <a href="/" class="btn" style="background:#b3bacd;">🔄 Run New Test</a>
+    </div>
 
     <div class="footer">
       🚀 This SEO analysis was powered by <b>Smashing Pixels</b>. Want help fixing your site's SEO?
