@@ -1,134 +1,218 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>SEO Analysis Results</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      background: #f1f5f9; color: #1f2937; padding: 2rem;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #eef1f7;
+      margin: 0;
+      padding: 0;
     }
-    .result-card {
-      background: #fff; border-radius: 0.75rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      padding: 1.5rem; margin-bottom: 2rem;
+    .container {
+      max-width: 900px;
+      margin: 3rem auto;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 8px 36px 0 #0001;
+      padding: 2rem 2rem 1.2rem 2rem;
+    }
+    h1 {
+      text-align: center;
+      margin-top: 0;
+    }
+    a { color: #4058f5; }
+    .result-block {
+      margin-bottom: 2.5rem;
+    }
+    .field-label {
+      font-weight: bold;
+      display: block;
+      margin-top: 1.1em;
+      margin-bottom: .2em;
+    }
+    .show-more-content {
+      display: inline;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+    .show-more-link {
+      color: #3e4eff;
+      cursor: pointer;
+      margin-left: 6px;
+      font-size: 0.97em;
+      text-decoration: underline;
     }
     .suggestions {
-      background: #fff3cd; border-left: 4px solid #ffecb5;
-      padding: 1rem; border-radius: 0.5rem;
+      background: #fff9e1;
+      border-left: 5px solid #facc15;
+      margin-top: 1.2em;
+      margin-bottom: 1.6em;
+      padding: 1em 1.4em;
+      border-radius: .6em;
+    }
+    .suggestions ul {
+      margin: .2em 0 0 0;
+      padding-left: 1.1em;
     }
     .form-footer {
-      max-width: 480px; margin: 2rem auto;
+      margin-top: 2.2em;
+      text-align: center;
     }
-    .trunc {
-      overflow: hidden;
-      max-height: 7.5em;
-      position: relative;
-    }
-    .trunc.expanded {
-      max-height: none;
-    }
-    .show-more {
+    input[type="text"], input[type="email"] {
+      width: 320px;
+      padding: .7em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-bottom: 1.3em;
+      font-size: 1em;
       display: block;
-      margin-top: 0.5rem;
-      color: #2563eb;
+      margin-left: auto;
+      margin-right: auto;
+      background: #f8fafd;
+    }
+    button, .btn {
+      font-size: 1em;
+      padding: .67em 1.4em;
+      color: #fff;
+      background: #2453ea;
+      border: none;
+      border-radius: 6px;
+      margin: 0.6em 0.3em 0.6em 0.3em;
       cursor: pointer;
-      font-size: 0.9rem;
+      box-shadow: 0 2px 6px #0002;
+      transition: background 0.2s;
+    }
+    button:hover, .btn:hover {
+      background: #394cd9;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 3em;
+      color: #a5adc7;
+      font-size: 1em;
+    }
+    .footer a { color: #4058f5; }
+    @media (max-width:600px){
+      .container { padding: 1.1rem 0.3rem; }
+      input[type="text"], input[type="email"] { width:95%; }
     }
   </style>
   <script>
-    function toggleExpand(btn) {
-      const block = btn.previousElementSibling;
-      block.classList.toggle('expanded');
-      btn.innerText = block.classList.contains('expanded') ? 'Show less' : 'Show more';
+    function toggleShowMore(id) {
+      const more = document.getElementById('show-more-' + id);
+      const btn = document.getElementById('show-more-btn-' + id);
+      if (more.style.display === 'none') {
+        more.style.display = 'inline';
+        btn.innerText = 'Show less';
+      } else {
+        more.style.display = 'none';
+        btn.innerText = 'Show more';
+      }
     }
   </script>
 </head>
 <body>
   <div class="container">
-    <h2 class="text-center mb-4">SEO Analysis Results</h2>
-    {% for row in data %}
-    <div class="result-card">
-      <p><a href="{{ row.url }}" target="_blank">{{ row.url }}</a></p>
-      <p><strong>Title:</strong> {{ row.title }}</p>
-      <p><strong>Meta Description:</strong>
-        <div class="trunc">{{ row.meta_description }}</div>
-        {% if row.meta_description|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>H1:</strong>
-        <div class="trunc">{{ row.h1 }}</div>
-        {% if row.h1|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>H2:</strong>
-        <div class="trunc">{{ row.h2 }}</div>
-        {% if row.h2|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>H3:</strong>
-        <div class="trunc">{{ row.h3 }}</div>
-        {% if row.h3|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>H4:</strong>
-        <div class="trunc">{{ row.h4 }}</div>
-        {% if row.h4|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      <p><strong>Schema:</strong>
-        <div class="trunc">{{ row.schema or "N/A" }}</div>
-        {% if row.schema and row.schema|length > 200 %}
-        <span class="show-more" onclick="toggleExpand(this)">Show more</span>
-        {% endif %}
-      </p>
-      {% if row.suggestions %}
-      <div class="suggestions mt-3">
-        <strong>Suggestions:</strong>
-        <ul>
-          {% for tip in row.suggestions %}
-          <li>{{ tip }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-      {% endif %}
-    </div>
-    {% endfor %}
+    <h1>SEO Analysis Results</h1>
 
     {% if message %}
-    <div class="alert alert-info text-center">{{ message }}</div>
+      <div style="background:#e3f5e8;color:#188659;padding:.8em 1.1em;border-radius:6px;margin-bottom:1.7em;text-align:center;font-weight:500;">
+        {{ message }}
+      </div>
     {% endif %}
 
-    <form action="/send_report" method="post" class="form-footer">
-      <div class="mb-3">
-        <label for="name" class="form-label">Your Name:</label>
-        <input type="text" name="name" class="form-control" required placeholder="John Doe">
+    {% for row in data %}
+      <div class="result-block">
+        <a href="{{ row.url }}" target="_blank">{{ row.url }}</a>
+        
+        <div class="field-label">Title:</div>
+        {{ row.title }}
+
+        <div class="field-label">Meta Description:</div>
+        {% set f=row.meta_description %}
+        {% if f and f|length > 400 %}
+          <span class="show-more-content">{{ f[:400] }}</span>
+          <span id="show-more-{{ loop.index0 }}-meta" class="show-more-content" style="display:none;">{{ f[400:] }}</span>
+          <span id="show-more-btn-{{ loop.index0 }}-meta" class="show-more-link" onclick="toggleShowMore('{{ loop.index0 }}-meta')">Show more</span>
+        {% else %}
+          <span class="show-more-content">{{ f or "N/A" }}</span>
+        {% endif %}
+
+        <div class="field-label">H1:</div>
+        {% set h1=row.h1 %}
+        {% if h1 and h1|length > 400 %}
+          <span class="show-more-content">{{ h1[:400] }}</span>
+          <span id="show-more-{{ loop.index0 }}-h1" class="show-more-content" style="display:none;">{{ h1[400:] }}</span>
+          <span id="show-more-btn-{{ loop.index0 }}-h1" class="show-more-link" onclick="toggleShowMore('{{ loop.index0 }}-h1')">Show more</span>
+        {% else %}
+          <span class="show-more-content">{{ h1 or "N/A" }}</span>
+        {% endif %}
+
+        <div class="field-label">H2:</div>
+        {% set h2=row.h2 %}
+        {% if h2 and h2|length > 400 %}
+          <span class="show-more-content">{{ h2[:400] }}</span>
+          <span id="show-more-{{ loop.index0 }}-h2" class="show-more-content" style="display:none;">{{ h2[400:] }}</span>
+          <span id="show-more-btn-{{ loop.index0 }}-h2" class="show-more-link" onclick="toggleShowMore('{{ loop.index0 }}-h2')">Show more</span>
+        {% else %}
+          <span class="show-more-content">{{ h2 or "N/A" }}</span>
+        {% endif %}
+
+        <div class="field-label">H3:</div>
+        {% set h3=row.h3 %}
+        {% if h3 and h3|length > 400 %}
+          <span class="show-more-content">{{ h3[:400] }}</span>
+          <span id="show-more-{{ loop.index0 }}-h3" class="show-more-content" style="display:none;">{{ h3[400:] }}</span>
+          <span id="show-more-btn-{{ loop.index0 }}-h3" class="show-more-link" onclick="toggleShowMore('{{ loop.index0 }}-h3')">Show more</span>
+        {% else %}
+          <span class="show-more-content">{{ h3 or "N/A" }}</span>
+        {% endif %}
+
+        <div class="field-label">H4:</div>
+        {% set h4=row.h4 %}
+        {% if h4 and h4|length > 400 %}
+          <span class="show-more-content">{{ h4[:400] }}</span>
+          <span id="show-more-{{ loop.index0 }}-h4" class="show-more-content" style="display:none;">{{ h4[400:] }}</span>
+          <span id="show-more-btn-{{ loop.index0 }}-h4" class="show-more-link" onclick="toggleShowMore('{{ loop.index0 }}-h4')">Show more</span>
+        {% else %}
+          <span class="show-more-content">{{ h4 or "N/A" }}</span>
+        {% endif %}
+
+        <div class="field-label">Schema:</div>
+        {% set sc=row.schema %}
+        {% if sc and sc|length > 400 %}
+          <span class="show-more-content">{{ sc[:400] }}</span>
+          <span id="show-more-{{ loop.index0 }}-schema" class="show-more-content" style="display:none;">{{ sc[400:] }}</span>
+          <span id="show-more-btn-{{ loop.index0 }}-schema" class="show-more-link" onclick="toggleShowMore('{{ loop.index0 }}-schema')">Show more</span>
+        {% else %}
+          <span class="show-more-content">{{ sc or "N/A" }}</span>
+        {% endif %}
+
+        <div class="suggestions">
+          <b>Suggestions:</b>
+          <ul>
+            {% for tip in row.suggestions %}
+              <li>{{ tip }}</li>
+            {% endfor %}
+          </ul>
+        </div>
       </div>
-      <div class="mb-3">
-        <label for="email" class="form-label">Your Email:</label>
-        <input type="email" name="email" class="form-control" required placeholder="you@example.com">
-      </div>
-      <div class="text-center">
-        <button type="submit" class="btn btn-primary">
-          📧 Email Me This Report
-        </button>
-      </div>
+    {% endfor %}
+
+    <form class="form-footer" action="/send_report" method="post">
+      <input type="text" name="name" placeholder="Your Name" required value="{{ name or '' }}">
+      <input type="email" name="email" placeholder="Your Email" required value="{{ email or '' }}">
+      <button class="btn" type="submit">📧 Email Me This Report</button>
     </form>
 
-    <hr class="my-5">
-    <p class="text-center text-muted small">
-      🚀 This SEO analysis was powered by <strong>Smashing Pixels</strong>.  
-      Want help fixing your site's SEO?  
-      <a href="mailto:trevor@smashingpixels.ca">Contact Trevor Cherewka</a> or  
+    <div class="footer">
+      🚀 This SEO analysis was powered by <b>Smashing Pixels</b>. Want help fixing your site's SEO?
+      <a href="mailto:trevor@smashingpixels.ca">Contact Trevor Cherewka</a> or
       <a href="https://calendly.com/trevorcherewka">Book a consult</a>.
-    </p>
+    </div>
   </div>
 </body>
 </html>
